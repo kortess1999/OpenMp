@@ -15,7 +15,8 @@ int getFileSize(const char* file_name) {
         _file_size = -1;
     }
     else {
-        _file_size = fseek(fd, 0, SEEK_END);
+        fseek(fd, 0, SEEK_END);
+        _file_size = ftell(fd);
         fclose(fd);
     }
     return _file_size;
