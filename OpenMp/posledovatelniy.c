@@ -1,10 +1,9 @@
-#define _CRT_SECURE_NO_WARNINGS
+/*#define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
-#include <omp.h>
 
 int getFileSize(const char* file_name) {
 
@@ -24,12 +23,23 @@ int getFileSize(const char* file_name) {
 
 int main()
 {
+    
+    char cwd[120];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working dir: %s\n", cwd);
+    }
+    else {
+        perror("getcwd() error");
+        return 1;
+    }
+
     FILE* fileIn;
     FILE* fileOut;
     char inputFile[1024];
     char outputFile[1024];
     int data;
     int arraySize, stepCount = 0;
+    float summa = 0;
     int startTime, endTime;
     long fileLen;
 
@@ -57,7 +67,7 @@ int main()
     double* outputData = (double*)malloc((numbersCount / arraySize + 1) * sizeof(double));
 
     if (inputData == NULL || outputData == NULL) {
-        printf("Error data allocation");
+        printf("Ошибка выделения памяти");
     }
     int i = 0;
     while (fread(&data, sizeof(int), 1, fileIn)) {
@@ -65,31 +75,21 @@ int main()
     }
 
     startTime = clock();
-
-    #pragma omp parallel private(i) num_threads(5)
-    {
-        float summa = 0;
-        const int threadNum = omp_get_thread_num();
-        const int portionSize = numbersCount / arraySize / omp_get_num_threads();
-
-        for (int j = portionSize * threadNum; j < portionSize * (threadNum + 1) ; j++) {
-            summa = 0;
-            for (int i = 0; i < arraySize; i++) {
-                summa += inputData[j * arraySize + i];
-            }
-            outputData[j] = (summa / arraySize);
+    int thread = 0;
+    for (thread = 0; thread < numbersCount / arraySize; thread++) {
+        summa = 0;
+        for (i = 0; i < arraySize; i++) {
+            summa += inputData[thread * arraySize + i];
         }
-
-        #pragma omp master
-        {
-            summa = 0;
-            for (int i = (numbersCount / arraySize / omp_get_num_threads()) * omp_get_num_threads(); i < numbersCount; i++)
-                summa += inputData[i];
-
-            outputData[i / arraySize] = (summa / arraySize);
-        }
+        outputData[thread] = (summa / arraySize);
     }
-    
+
+    summa = 0;
+    for (int i = thread * arraySize; i < numbersCount; i++)
+        summa += inputData[i];
+
+    outputData[i / arraySize] = (summa / arraySize);
+
     endTime = clock();
 
     for (int i = 0; i < numbersCount / arraySize + 1; i++) {
@@ -104,4 +104,4 @@ int main()
     fclose(fileOut);
 
     return 0;
-}
+}*/
